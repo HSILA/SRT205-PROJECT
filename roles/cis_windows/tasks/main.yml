@@ -1,0 +1,28 @@
+---
+- name: Configure maximum password age
+  ansible.windows.win_command: "net accounts /maxpwage:{{ max_password_age }}"
+  register: password_maxage
+
+- name: Configure password history size
+  ansible.windows.win_command: "net accounts /uniquepw:{{ password_history_size }}"
+  register: password_history
+
+- name: Disable guest account
+  ansible.windows.win_user:
+    name: Guest
+    state: present
+    account_disabled: yes
+  register: guest_disabled
+
+- name: Ensure firewall is enabled
+  community.windows.win_firewall:
+    state: on
+  register: firewall_enabled
+
+- name: Set Windows CIS results
+  set_fact:
+    cis_windows_results:
+      password_maxage: "{{ 'pass' if password_maxage is succeeded else 'fail' }}"
+      password_history: "{{ 'pass' if password_history is succeeded else 'fail' }}"
+      guest_disabled: "{{ 'pass' if guest_disabled is succeeded else 'fail' }}"
+      firewall_enabled: "{{ 'pass' if firewall_enabled is succeeded else 'fail' }}"

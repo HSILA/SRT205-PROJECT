@@ -1,0 +1,3 @@
+---
+max_password_age: 365
+password_history_size: 24

@@ -1,0 +1,49 @@
+---
+- name: Ensure password expiration is configured
+  lineinfile:
+    path: /etc/login.defs
+    regexp: '^PASS_MAX_DAYS'
+    line: "PASS_MAX_DAYS {{ pass_max_days }}"
+  register: password_expiration
+
+- name: Disable root login over SSH
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^PermitRootLogin'
+    line: "PermitRootLogin {{ ssh_permit_root_login }}"
+  notify: restart ssh
+  register: disable_root_ssh
+
+- name: Install unattended-upgrades package
+  package:
+    name: unattended-upgrades
+    state: present
+  register: install_unattended_upgrades
+
+- name: Ensure ufw package is installed
+  package:
+    name: ufw
+    state: present
+  register: ufw_package
+
+- name: Allow SSH through firewall
+  ufw:
+    rule: allow
+    name: OpenSSH
+  register: ufw_allow_ssh
+
+- name: Ensure firewall is enabled
+  ufw:
+    state: enabled
+    logging: on
+  register: ufw_enabled
+
+- name: Set Ubuntu CIS results
+  set_fact:
+    cis_ubuntu_results:
+      password_expiration: "{{ 'pass' if password_expiration is succeeded else 'fail' }}"
+      disable_root_ssh: "{{ 'pass' if disable_root_ssh is succeeded else 'fail' }}"
+      unattended_upgrades: "{{ 'pass' if install_unattended_upgrades is succeeded else 'fail' }}"
+      ufw_package: "{{ 'pass' if ufw_package is succeeded else 'fail' }}"
+      ufw_allow_ssh: "{{ 'pass' if ufw_allow_ssh is succeeded else 'fail' }}"
+      ufw_enabled: "{{ 'pass' if ufw_enabled is succeeded else 'fail' }}"

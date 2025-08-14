@@ -1,0 +1,13 @@
+---
+- name: Apply CIS hardening and generate report
+  hosts: all
+  become: yes
+  gather_facts: yes
+  collections:
+    - ansible.windows
+    - ansible.posix
+
+  roles:
+    - { role: cis_ubuntu, when: ansible_os_family == 'Debian' }
+    - { role: cis_windows, when: ansible_os_family == 'Windows' }
+    - audit_compliance

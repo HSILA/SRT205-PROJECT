@@ -1,0 +1,9 @@
+---
+- name: Merge role compliance results
+  set_fact:
+    compliance_results: "{{ cis_ubuntu_results | default({}) | combine(cis_windows_results | default({})) }}"
+
+- name: Generate compliance report
+  template:
+    src: report.j2
+    dest: "compliance_report_{{ inventory_hostname }}.txt"
