@@ -5,7 +5,7 @@ This repository contains an Ansible-based approach for applying a subset of CIS 
 ## Checklist Overview
 
 - **Ansible Roles**: `cis_ubuntu`, `cis_windows`, and `audit_compliance`.
-- **CIS Controls**: Example tasks including password policies, SSH hardening, automatic updates, and firewall configuration.
+- **CIS Controls**: Each OS role now implements ten baseline checks drawn from the CIS Benchmarks and course slides. Examples include password policies, account lockout settings, SSH/RDP hardening, automatic updates, and firewall rules.
 - **Reporting**: The `audit_compliance` role generates a simple text report summarizing task outcomes for each host.
 
 ## Approach
@@ -13,6 +13,29 @@ This repository contains an Ansible-based approach for applying a subset of CIS 
 1. **Role-Based Structure**: Each operating system has its own role with idempotent tasks that configure CIS recommendations.
 2. **Result Aggregation**: Roles publish their results as facts which are merged by `audit_compliance` to build a report using a Jinja2 template.
 3. **Extensibility**: Additional CIS controls can be added by appending tasks to the respective role and updating the results dictionary.
+4. **Course Alignment**: The implementation follows the conventions discussed in the class slide deck (roles, variables, Jinja2 templates, and error handling) so the code mirrors expected best practices.
+
+### Implemented Controls
+
+**Ubuntu**
+
+- Password expiration policy
+- SSH root login disabled
+- ptrace restricted
+- unattended security updates configured
+- `ufw` installed and enabled
+- SSH allowed through firewall
+- cron access restricted
+- `/tmp` mounted with `noexec` and `nosuid`
+
+**Windows**
+
+- Maximum password age and history settings
+- Guest and Administrator accounts disabled
+- Account lockout threshold and reset window
+- Blank passwords limited to console logon
+- Firewall enabled
+- Logon banner and inactivity timeout configured
 
 ## Running the Playbook
 
