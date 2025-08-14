@@ -1,0 +1,9 @@
+Compliance Report for {{ inventory_hostname }}
+============================================
+
+{% if compliance_results %}
+{% for control, status in compliance_results.items() %}- {{ control }}: {{ status }}
+{% endfor %}
+{% else %}
+No compliance data available.
+{% endif %}
