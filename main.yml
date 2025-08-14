@@ -6,6 +6,7 @@
   collections:
     - ansible.windows
     - ansible.posix
+    - community.windows
 
   roles:
     - { role: cis_ubuntu, when: ansible_os_family == 'Debian' }

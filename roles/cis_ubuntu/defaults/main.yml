@@ -1,3 +1,8 @@
 ---
 pass_max_days: 90
 ssh_permit_root_login: 'no'
+ptrace_scope: 1
+auto_upgrade_enable: true
+cron_allowed_users:
+  - root
+tmp_mount_options: defaults,noexec,nosuid

@@ -14,11 +14,28 @@
   notify: restart ssh
   register: disable_root_ssh
 
+- name: Restrict ptrace usage
+  sysctl:
+    name: kernel.yama.ptrace_scope
+    value: "{{ ptrace_scope }}"
+    state: present
+    reload: yes
+  register: ptrace_restrict
+
 - name: Install unattended-upgrades package
   package:
     name: unattended-upgrades
     state: present
   register: install_unattended_upgrades
+
+- name: Configure automatic security updates
+  copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+  when: auto_upgrade_enable
+  register: auto_updates
 
 - name: Ensure ufw package is installed
   package:
@@ -38,12 +55,32 @@
     logging: on
   register: ufw_enabled
 
+- name: Ensure cron is restricted to authorized users
+  copy:
+    dest: /etc/cron.allow
+    content: "{{ cron_allowed_users | join('\n') }}\n"
+    owner: root
+    group: root
+    mode: '0600'
+  register: cron_restriction
+
+- name: Ensure /tmp partition includes noexec and nosuid
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^/tmp'
+    line: "/tmp  tmpfs  {{ tmp_mount_options }}  0  0"
+  register: tmp_mount
+
 - name: Set Ubuntu CIS results
   set_fact:
     cis_ubuntu_results:
       password_expiration: "{{ 'pass' if password_expiration is succeeded else 'fail' }}"
       disable_root_ssh: "{{ 'pass' if disable_root_ssh is succeeded else 'fail' }}"
+      ptrace_restrict: "{{ 'pass' if ptrace_restrict is succeeded else 'fail' }}"
       unattended_upgrades: "{{ 'pass' if install_unattended_upgrades is succeeded else 'fail' }}"
+      auto_updates: "{{ 'pass' if auto_updates is succeeded else 'fail' }}"
       ufw_package: "{{ 'pass' if ufw_package is succeeded else 'fail' }}"
       ufw_allow_ssh: "{{ 'pass' if ufw_allow_ssh is succeeded else 'fail' }}"
       ufw_enabled: "{{ 'pass' if ufw_enabled is succeeded else 'fail' }}"
+      cron_restriction: "{{ 'pass' if cron_restriction is succeeded else 'fail' }}"
+      tmp_mount: "{{ 'pass' if tmp_mount is succeeded else 'fail' }}"

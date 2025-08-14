@@ -1,3 +1,7 @@
 ---
-max_password_age: 365
+max_password_age: 60
 password_history_size: 24
+lockout_threshold: 5
+lockout_window: 15
+logon_banner_text: 'Authorized use only'
+machine_inactivity_limit: 900

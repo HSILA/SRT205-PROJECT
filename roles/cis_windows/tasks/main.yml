@@ -15,9 +15,47 @@
   register: guest_disabled
 
 - name: Ensure firewall is enabled
-  community.windows.win_firewall:
+  ansible.windows.win_firewall:
     state: on
   register: firewall_enabled
+
+- name: Configure account lockout threshold
+  ansible.windows.win_command: "net accounts /lockoutthreshold:{{ lockout_threshold }}"
+  register: account_lockout_threshold
+
+- name: Configure reset account lockout counter
+  ansible.windows.win_command: "net accounts /lockoutwindow:{{ lockout_window }}"
+  register: lockout_window_result
+
+- name: Limit local account use of blank passwords to console logon
+  community.windows.win_security_policy:
+    section: System Access
+    key: LimitBlankPasswordUse
+    value: 1
+  register: limit_blank_passwords
+
+- name: Disable administrator account
+  ansible.windows.win_user:
+    name: Administrator
+    state: present
+    account_disabled: yes
+  register: admin_disabled
+
+- name: Set logon banner text
+  ansible.windows.win_regedit:
+    path: HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System
+    name: LegalNoticeText
+    data: "{{ logon_banner_text }}"
+    type: string
+  register: logon_banner
+
+- name: Set machine inactivity limit
+  ansible.windows.win_regedit:
+    path: HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System
+    name: InactivityTimeoutSecs
+    data: "{{ machine_inactivity_limit }}"
+    type: dword
+  register: inactivity_limit
 
 - name: Set Windows CIS results
   set_fact:
@@ -26,3 +64,9 @@
       password_history: "{{ 'pass' if password_history is succeeded else 'fail' }}"
       guest_disabled: "{{ 'pass' if guest_disabled is succeeded else 'fail' }}"
       firewall_enabled: "{{ 'pass' if firewall_enabled is succeeded else 'fail' }}"
+      lockout_threshold: "{{ 'pass' if account_lockout_threshold is succeeded else 'fail' }}"
+      lockout_window: "{{ 'pass' if lockout_window_result is succeeded else 'fail' }}"
+      limit_blank_passwords: "{{ 'pass' if limit_blank_passwords is succeeded else 'fail' }}"
+      admin_disabled: "{{ 'pass' if admin_disabled is succeeded else 'fail' }}"
+      logon_banner: "{{ 'pass' if logon_banner is succeeded else 'fail' }}"
+      inactivity_limit: "{{ 'pass' if inactivity_limit is succeeded else 'fail' }}"
